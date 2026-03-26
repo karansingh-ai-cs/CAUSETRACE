@@ -7,7 +7,7 @@ load_dotenv()
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 # ============================================
-# LAYER 1 — LLaMA se jawab lena
+# LAYER 1 — LLaMA gives answer
 # ============================================
 
 def ask_llama(question):
@@ -26,7 +26,7 @@ def ask_llama(question):
 
 def extract_causal_pairs(text):
     
-    # Causal keywords jo hum dhundhenge
+    # finding Causal keywords
     causal_keywords = [
         "because", "therefore", "due to",
         "as a result", "caused by", "leads to",
@@ -34,11 +34,11 @@ def extract_causal_pairs(text):
         "which causes", "resulting in", "hence"
     ]
     
-    # Text ko sentences mein todna
+    # Breaking Text into sentences 
     sentences = text.replace(".", ".|").replace("?", "?|").replace("!", "!|").split("|")
     sentences = [s.strip() for s in sentences if len(s.strip()) > 10]
     
-    # Causal sentences dhundhna
+    # finding Causal sentences 
     causal_sentences = []
     for sentence in sentences:
         for keyword in causal_keywords:
@@ -54,25 +54,25 @@ def extract_causal_pairs(text):
 
 # ============================================
 # LAYER 3 — Implicit causality check
-# (Yahan system fail karta hai — honest documentation)
+# (here system fails  — honest documentation)
 # ============================================
 
 def check_implicit_causality(sentences):
     
-    # Consecutive sentences jo causal lag sakti hain
-    # but keyword nahi hai
+    # Consecutive sentences which looks causal
+    # but are not keyword 
     possible_implicit = []
     
     for i in range(len(sentences) - 1):
         s1 = sentences[i]
         s2 = sentences[i+1]
         
-        # Simple heuristic — agar dono sentences mein
-        # koi common important word hai but causal keyword nahi
+        # Simple heuristic — if both sentences have
+        #  common important word  but not causal keyword 
         words1 = set(s1.lower().split())
         words2 = set(s2.lower().split())
         
-        # Common words (ignore karo common English words)
+        # Common words (ignore  common English words)
         stopwords = {"the", "a", "an", "is", "are", "was", 
                     "were", "it", "they", "this", "that", 
                     "and", "or", "but", "in", "on", "at",
@@ -93,12 +93,12 @@ def check_implicit_causality(sentences):
 
 # ============================================
 # LAYER 3 — Blind Evaluation
-# (GPT-Black style — Professor Choi ke paper se inspired)
+# (GPT-Black style — Professor Choi's paper inspired)
 # ============================================
 
 def blind_evaluate(sentence1, sentence2):
     
-    # LLaMA ko pata nahi ki woh evaluate kar raha hai
+    # LLaMA does not know it is evaluating
     # Yahi "blind" evaluation hai
     
     prompt = f"""Read these two statements carefully:
@@ -117,7 +117,7 @@ Then give one short reason."""
     
     result = response.choices[0].message.content.strip()
     
-    # YES ya NO pakdo
+    # Catch YES or NO 
     if result.upper().startswith("YES"):
         verdict = "YES — Causal"
     elif result.upper().startswith("NO"):
@@ -131,7 +131,7 @@ Then give one short reason."""
     }
 
 # ============================================
-# MAIN — Sab layers saath chalana
+# MAIN — run all  layers 
 # ============================================
 
 def causetrace(question):
@@ -140,13 +140,13 @@ def causetrace(question):
     print("CAUSETRACE — Causal Explanation Extractor")
     print("=" * 60)
     
-    # Step 1 — Jawab lo
+    # Step 1 — take answers 
     print(f"\nQUESTION: {question}")
     print("\nGetting answer from LLaMA...")
     answer = ask_llama(question)
     print(f"\nLLAMA ANSWER:\n{answer}")
     
-    # Step 2 — Explicit causal pairs nikalo
+    # Step 2 —  find explicit causal pairs 
     causal_pairs, all_sentences = extract_causal_pairs(answer)
     
     print("\n" + "=" * 60)
@@ -160,7 +160,7 @@ def causetrace(question):
     else:
         print("None found.")
     
-    # Step 3 — Implicit check karo
+    # Step 3 — Implicit check 
     implicit = check_implicit_causality(all_sentences)
     
     print("\n" + "=" * 60)
@@ -204,8 +204,8 @@ def causetrace(question):
             print(f"    Reason: {eval_result['full_response'][:100]}")
             
             # Divergence check
-            # Keyword method ne "implicit" kaha
-            # Agar blind evaluation "NO" kehta hai — divergence hai
+            # Keyword method said "implicit" 
+            # if blind evaluation says "NO"  — divergence 
             if "NO" in eval_result['verdict']:
                 print(f"    ⚠ DIVERGENCE: Keyword method flagged this but LLaMA disagrees")
                 divergence_count += 1
@@ -229,7 +229,7 @@ def causetrace(question):
     print(f"Divergence rate: {round(divergence_count/3*100)}%")
     # ============================================
     # LAYER 4 — Consistency Test
-    # Same question 3 baar — kya same causal pairs aate hain?
+    # Same question 3 times —  same causal pairs each time?
     # ============================================
     
     print("\n" + "=" * 60)
@@ -247,7 +247,7 @@ def causetrace(question):
         all_keywords.append(set(keywords))
         print(f"Keywords found: {keywords if keywords else 'None'}")
     
-    # Teeno runs mein common keywords
+    #  common keywords in all three runs
     if all_keywords[0] and all_keywords[1] and all_keywords[2]:
         common = all_keywords[0] & all_keywords[1] & all_keywords[2]
         total = all_keywords[0] | all_keywords[1] | all_keywords[2]
@@ -271,8 +271,18 @@ def causetrace(question):
     print("=" * 60)
 
 # ============================================
-# TEST KARO
+# TEST IT
 # ============================================
 
-# Yeh questions test karo ek ek karke
-causetrace("Why do antibiotics stop working over time?")
+# testing questions
+questions = [
+    "Why do antibiotics stop working over time?",
+    "Why does exercise improve mental health?",
+    "Why do economies go into recession?",
+    "Why does sleep deprivation affect memory?",
+    "Why do stars appear only at night?"
+]
+
+for q in questions:
+    causetrace(q)
+    print("\n" * 3)
