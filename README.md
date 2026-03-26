@@ -43,29 +43,42 @@ Final Report
 
 ---
 
-## Key Findings
+## Experimental Results
 
-Tested on question: *"Why do antibiotics stop 
-working over time?"*
+Tested across 5 diverse questions spanning biology, 
+economics, psychology, and astronomy.
 
-| Metric | Result |
-|--------|--------|
-| Explicit causal pairs found | 2 |
-| Implicit pairs flagged | 6 |
-| Blind evaluation divergence rate | **67%** |
-| Consistency score (3 runs) | **0.33** |
-| Reasoning verdict | **UNSTABLE** |
+| Question | Divergence | Consistency | Verdict |
+|----------|-----------|-------------|---------|
+| Antibiotics & resistance | 67% | 0.33 | UNSTABLE |
+| Exercise & mental health | 100% | 0.00 | UNSTABLE |
+| Economic recession | 100% | 0.25 | UNSTABLE |
+| Sleep & memory | 100% | 0.00 | UNSTABLE |
+| Stars at night | 100% | 0.00 | UNSTABLE |
 
-**Finding 1:** Keyword-based detection flagged 3 
-implicit pairs as causal. Blind LLM evaluation 
-rejected 2 of them (67% divergence).
+**Average divergence rate: 93.4%**
+**Average consistency score: 0.116 / 1.0**
 
-**Finding 2:** Same question asked 3 times produced 
-different causal keywords in each run — 
-consistency score of only 0.33 out of 1.0.
+### Key Findings
 
----
+**Finding 1 — Keyword detection is unreliable:**
+Across 5 questions, blind LLM evaluation rejected 
+93.4% of pairs flagged by keyword-based implicit 
+detection. Keyword overlap is not a valid proxy 
+for causal relationship.
 
+**Finding 2 — LLM causal reasoning is unstable:**
+4 out of 5 questions produced a consistency score 
+of 0.00 — meaning the same question asked 3 times 
+produced completely different causal keywords each 
+time. Only 1 question achieved partial stability 
+(score: 0.33).
+
+**Conclusion:** LLM-generated causal explanations 
+are neither reliably detectable by surface methods 
+nor consistent across multiple runs. This suggests 
+fundamental limitations in how current LLMs 
+represent causal knowledge.
 ## Known Limitations
 
 - Implicit causality detection is heuristic-based 
